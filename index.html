@@ -558,8 +558,8 @@ const STATE = {
   pagesMax: 20,
   files: [],
   rfis: [],
-  currentFilter: 'all',
-  apiKey: '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'
+  currentFilter: 'all'
+  // API key lives securely on the Vercel server — not here
 };
 
 /* ═══════════════════════════════════════════
@@ -803,32 +803,28 @@ Return a JSON array of RFI objects in this exact format:
 ]`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // ── Calls YOUR secure Vercel proxy — API key never touches the browser ──
+    // Replace YOUR_VERCEL_URL below with your actual Vercel deployment URL
+    const PROXY_URL = 'https://buildiq-server.vercel.app/api/analyze';
+
+    logLine('// Sending to BuildIQ secure AI server...', 'highlight');
+    await delay(300);
+
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': STATE.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        stream: true,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
     });
 
-    if (!response.ok) throw new Error('API error: ' + response.status);
+    if (!response.ok) throw new Error('Server error: ' + response.status);
 
-    logLine('// Connection established — streaming analysis...', 'highlight');
+    const data = await response.json();
+    const fullText = data.content?.[0]?.text || '';
+
+    logLine('// Connection established — processing analysis...', 'highlight');
     await delay(200);
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let chunkCount = 0;
-
+    // Simulate streaming progress messages while we parse
     const streamMessages = [
       '// Scanning floor plan geometry...',
       '// Detecting wall type conflicts...',
@@ -842,31 +838,9 @@ Return a JSON array of RFI objects in this exact format:
       '// Scoring by cost and schedule impact...',
       '// Formatting RFIs to AIA standard...',
     ];
-    let msgIdx = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-            fullText += parsed.delta.text;
-            chunkCount++;
-            // Show progress messages as data streams in
-            if (chunkCount % 18 === 0 && msgIdx < streamMessages.length) {
-              logLine(streamMessages[msgIdx++]);
-            }
-          }
-        } catch(e) { /* skip malformed lines */ }
-      }
+    for (const msg of streamMessages) {
+      logLine(msg);
+      await delay(250);
     }
 
     logLine('// Analysis complete — parsing RFI data...', 'highlight');
