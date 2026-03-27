@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BuildIQ — AI RFI Generator</title>
+<title>PlanIQ Pro — AI RFI Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <!-- PDF.js — reads PDF files in the browser, no server needed -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -91,7 +91,7 @@ body::before {
 .plan-card-price sup { font-family: var(--mono); font-size: 18px; vertical-align: super; }
 .plan-card-note { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; opacity: 0.55; margin-bottom: 28px; }
 .plan-card-divider { height: 1px; background: currentColor; opacity: 0.1; margin-bottom: 24px; }
-.plan-feat { font-size: 13px; padding: 7px 0; display: flex; gap: 10px; border-bottom: 1px solid currentColor; border-bottom-color: rgba(13,13,13,0.06); opacity: 0.8; }
+.plan-feat { font-size: 15px; padding: 9px 0; display: flex; gap: 10px; border-bottom: 1px solid currentColor; border-bottom-color: rgba(13,13,13,0.08); opacity: 0.9; }
 .plan-card.featured .plan-feat { border-bottom-color: rgba(255,255,255,0.07); }
 .plan-feat::before { content: '→'; opacity: 0.4; flex-shrink: 0; }
 .plan-btn {
@@ -333,7 +333,7 @@ body::before {
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="logo"><div class="logo-dot"></div>BUILDIQ</div>
+    <div class="logo"><div class="logo-dot"></div>PLANIQ PRO</div>
     <div class="plan-pill" id="planPill">Plan: <span id="planLabel">—</span></div>
   </div>
 
@@ -342,9 +342,9 @@ body::before {
   ═══════════════════════════════════════ -->
   <div class="section active" id="sec-plans">
     <div class="pay-hero">
-      <div class="pay-tag">AI-Powered RFI Generator</div>
+      <div class="pay-tag">PlanIQ Pro — AI-Powered RFI Generator</div>
       <h1 class="pay-h1">UPLOAD. ANALYZE.<br><em>Never miss</em> AN RFI.</h1>
-      <p class="pay-sub">Upload your PDF construction drawings and BuildIQ's AI instantly generates every RFI your project needs — streamed live, ready to export.</p>
+      <p class="pay-sub">Upload your PDF construction drawings and PlanIQ Pro's AI instantly generates every RFI your project needs — streamed live, ready to export.</p>
     </div>
 
     <div class="plans-grid">
@@ -354,7 +354,8 @@ body::before {
         <div class="plan-card-note">one-time · no subscription</div>
         <div class="plan-card-divider"></div>
         <div class="plan-feat">2 drawing uploads</div>
-        <div class="plan-feat">Up to 20 pages per upload</div>
+        <div class="plan-feat">Up to 30 pages per upload</div>
+        <div class="plan-feat">Up to 10 RFIs generated</div>
         <div class="plan-feat">Full AI RFI analysis</div>
         <div class="plan-feat">PDF + CSV export</div>
         <button class="plan-btn" onclick="selectPlan('starter', '$39 one-time')">Get Started →</button>
@@ -365,7 +366,8 @@ body::before {
         <div class="plan-card-note">per month · unlimited uploads</div>
         <div class="plan-card-divider"></div>
         <div class="plan-feat">Unlimited uploads</div>
-        <div class="plan-feat">Up to 25 pages per drawing set</div>
+        <div class="plan-feat">Up to 35 pages per drawing set</div>
+        <div class="plan-feat">Up to 10 RFIs generated</div>
         <div class="plan-feat">Full AI RFI analysis</div>
         <div class="plan-feat">PDF + CSV export</div>
         <button class="plan-btn" onclick="selectPlan('pro', '$199/month')">Start Free Trial →</button>
@@ -377,7 +379,8 @@ body::before {
         <div class="plan-card-note">per month · unlimited uploads</div>
         <div class="plan-card-divider"></div>
         <div class="plan-feat">Unlimited uploads</div>
-        <div class="plan-feat">Up to 30 pages per drawing set</div>
+        <div class="plan-feat">Up to 40 pages per drawing set</div>
+        <div class="plan-feat">Up to 15 RFIs generated</div>
         <div class="plan-feat">Full AI RFI analysis</div>
         <div class="plan-feat">PDF + CSV export</div>
         <div class="plan-feat">Priority ranking + risk scoring</div>
@@ -520,7 +523,7 @@ body::before {
     <div id="procoreForm">
       <div class="modal-logo">🏗 PROCORE</div>
       <div class="modal-title">PUSH RFIS TO PROCORE</div>
-      <div class="modal-sub">Enter your Procore project details. BuildIQ will format and push all generated RFIs directly into your project's RFI log.</div>
+      <div class="modal-sub">Enter your Procore project details. PlanIQ Pro will format and push all generated RFIs directly into your project's RFI log.</div>
       <div class="modal-field">
         <label class="modal-label">Procore Company ID</label>
         <input type="text" class="modal-input" id="procoreCompanyId" placeholder="e.g. 12345678"/>
@@ -555,7 +558,7 @@ const STATE = {
   planLabel: '',
   uploadsUsed: 0,
   uploadsMax: 2,
-  pagesMax: 20,
+  pagesMax: 30,
   files: [],
   rfis: [],
   currentFilter: 'all'
@@ -579,7 +582,7 @@ function selectPlan(plan, label) {
   STATE.planLabel = label;
   // Set upload limits and page limits per plan
   STATE.uploadsMax  = plan === 'starter' ? 2 : 999;
-  STATE.pagesMax    = plan === 'starter' ? 20 : plan === 'pro' ? 25 : 30;
+  STATE.pagesMax    = plan === 'starter' ? 30 : plan === 'pro' ? 35 : 40;
   document.getElementById('planLabel').textContent = label;
   const subText = {
     starter: 'Starter Plan — $39 one-time',
@@ -766,7 +769,7 @@ async function startAnalysis() {
     `FILE: ${f.name} (${f.pages} pages)\nCONTENT EXCERPT:\n${f.text.slice(0, 3000)}`
   ).join('\n\n===\n\n');
 
-  logLine('// BuildIQ AI Engine v2.4 — Initialized', 'highlight');
+  logLine('// PlanIQ Pro AI Engine v2.4 — Initialized', 'highlight');
   logLine(`// Loading ${STATE.files.length} drawing set(s)...`);
   await delay(400);
   logLine(`// ${STATE.files.reduce((a,f)=>a+f.pages,0)} sheets queued for analysis`);
@@ -775,15 +778,18 @@ async function startAnalysis() {
   await delay(600);
   logLine('// Checking IBC 2021, ADA standards, NFPA 101...');
   await delay(500);
-  logLine('// Sending to BuildIQ AI model...', 'highlight');
+  logLine('// Sending to PlanIQ Pro AI model...', 'highlight');
   await delay(300);
+
+  // RFI count limit based on plan
+  const rfiLimit = STATE.plan === 'elite' ? 15 : 10;
 
   const prompt = `You are a senior construction project manager with 20+ years experience on commercial projects. Your job is to review PDF construction drawing content and generate professional, detailed Requests for Information (RFIs).
 
 DRAWING CONTENT:
 ${drawingSummary}
 
-Generate between 8 and 14 detailed, realistic RFIs based on the drawing content above. If the drawings contain text about rooms, dimensions, systems, or specifications, use those details. If minimal text was extracted (image-based drawings), generate realistic RFIs for a typical commercial office/mixed-use construction project.
+Generate exactly ${rfiLimit} detailed, realistic RFIs based on the drawing content above. If the drawings contain text about rooms, dimensions, systems, or specifications, use those details. If minimal text was extracted (image-based drawings), generate realistic RFIs for a typical commercial office/mixed-use construction project.
 
 RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO EXPLANATION.
 
@@ -805,7 +811,7 @@ Return a JSON array of RFI objects in this exact format:
   try {
     const PROXY_URL = 'https://buildiq-server.vercel.app/api/analyze';
 
-    logLine('// Sending to BuildIQ secure AI server...', 'highlight');
+    logLine('// Sending to PlanIQ Pro secure AI server...', 'highlight');
     await delay(300);
 
     const response = await fetch(PROXY_URL, {
@@ -952,12 +958,12 @@ function exportCSV() {
     r.spec_ref, r.cost_impact, r.schedule_impact
   ].join(','));
   const csv = [headers.join(','), ...rows].join('\n');
-  downloadFile('buildiq-rfis.csv', csv, 'text/csv');
+  downloadFile('planiqpro-rfis.csv', csv, 'text/csv');
 }
 
 function exportJSON() {
   const json = JSON.stringify(STATE.rfis, null, 2);
-  downloadFile('buildiq-rfis.json', json, 'application/json');
+  downloadFile('planiqpro-rfis.json', json, 'application/json');
 }
 
 function downloadFile(name, content, type) {
