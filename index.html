@@ -764,9 +764,9 @@ async function startAnalysis() {
     log.scrollTop = log.scrollHeight;
   };
 
-  // Build the drawing summary for the prompt
+  // Build the drawing summary for the prompt — extract more text per page
   const drawingSummary = STATE.files.map(f =>
-    `FILE: ${f.name} (${f.pages} pages)\nCONTENT EXCERPT:\n${f.text.slice(0, 3000)}`
+    `FILE: ${f.name} (${f.pages} pages)\nCONTENT EXCERPT:\n${f.text.slice(0, 6000)}`
   ).join('\n\n===\n\n');
 
   logLine('// PlanIQ Pro AI Engine v2.4 — Initialized', 'highlight');
@@ -784,25 +784,45 @@ async function startAnalysis() {
   // RFI count limit based on plan
   const rfiLimit = STATE.plan === 'elite' ? 15 : 10;
 
-  const prompt = `You are a senior construction project manager with 20+ years experience on commercial projects. Your job is to review PDF construction drawing content and generate professional, detailed Requests for Information (RFIs).
+  const prompt = `You are a senior construction project manager and licensed architect with 25+ years of commercial construction experience. You are performing a detailed constructability review of PDF construction drawings.
 
-DRAWING CONTENT:
+DRAWING CONTENT BY PAGE:
 ${drawingSummary}
 
-Generate exactly ${rfiLimit} detailed, realistic RFIs based on the drawing content above. If the drawings contain text about rooms, dimensions, systems, or specifications, use those details. If minimal text was extracted (image-based drawings), generate realistic RFIs for a typical commercial office/mixed-use construction project.
+CRITICAL INSTRUCTIONS — READ CAREFULLY:
+1. Read EVERY page of the drawing content carefully and separately
+2. Each RFI must reference the SPECIFIC page, sheet number, room number, grid line, or detail number where the issue was found — do NOT default to G001 or the cover sheet unless the issue is actually on that sheet
+3. Look for issues ACROSS different pages — conflicts between sheets are the most valuable RFIs
+4. Reference actual room numbers, dimensions, equipment tags, door numbers, grid coordinates, and spec sections you find in the text
+5. Each RFI must be about a DIFFERENT issue on a DIFFERENT location — no repeating sheet references unless truly necessary
+6. Spread your RFIs across multiple disciplines: Architectural, Structural, MEP, Civil, Fire Protection
+7. Write descriptions that reference SPECIFIC details from the drawings — room names, dimensions, equipment, materials you actually see in the content
 
-RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO EXPLANATION.
+TYPES OF ISSUES TO LOOK FOR:
+- Conflicts between architectural and structural drawings
+- Missing dimensions or unclear dimensions
+- Door/window schedule conflicts with floor plans
+- MEP coordination issues (ducts, pipes, conduit conflicts)
+- Code compliance gaps (ADA, IBC, NFPA)
+- Specification conflicts with drawings
+- Missing details or sections
+- Finish schedule conflicts
+- Structural connections not detailed
+- Fire rating conflicts
+- Accessibility route issues
 
-Return a JSON array of RFI objects in this exact format:
+Generate exactly ${rfiLimit} RFIs. RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO EXPLANATION, NO PREAMBLE.
+
+Return a JSON array:
 [
   {
     "id": "RFI-001",
-    "title": "Short title describing the issue",
+    "title": "Specific concise title referencing the actual issue and location",
     "priority": "high" or "medium" or "low",
     "discipline": "Architectural" or "Structural" or "MEP" or "Civil" or "Fire Protection",
-    "location": "Sheet/grid reference or room name",
-    "description": "2-3 sentence detailed description of the issue, what needs clarification, and why it matters.",
-    "spec_ref": "Relevant spec section or drawing sheet number",
+    "location": "Specific sheet number AND room/grid/detail reference — e.g. Sheet A-201, Room 3-104, Grid B-7",
+    "description": "3 sentences: (1) What the drawing shows specifically, (2) What is unclear, missing, or conflicting, (3) Why it matters and what needs to be provided.",
+    "spec_ref": "Specific sheet number, detail number, or specification section — never just G001 unless issue is on cover sheet",
     "cost_impact": "Low (<$5K)" or "Medium ($5K-$50K)" or "High (>$50K)",
     "schedule_impact": "None" or "Low (1-3 days)" or "Medium (1-2 weeks)" or "High (2+ weeks)"
   }
