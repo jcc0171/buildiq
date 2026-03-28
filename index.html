@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>PlanIQ Pro — AI RFI Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <!-- PDF.js — reads PDF files in the browser, no server needed -->
@@ -67,9 +68,18 @@ body::before {
 .section.active { display: block; animation: fadeUp 0.4s ease; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 
-/* ══════════════════════════════════════════
-   SECTION 1: PAYMENT GATE
-══════════════════════════════════════════ */
+/* ── VIDEO SECTION ── */
+.video-section { text-align: center; padding: 20px 0 48px; }
+.video-label { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+.video-title { font-family: var(--disp); font-size: clamp(32px, 4vw, 52px); line-height: 0.95; letter-spacing: 1px; margin-bottom: 28px; }
+.video-title em { font-family: var(--serif); font-style: italic; color: var(--amber); }
+.video-wrap { max-width: 720px; margin: 0 auto; aspect-ratio: 16/9; background: var(--panel); position: relative; overflow: hidden; box-shadow: 12px 12px 0 rgba(13,13,13,0.12); }
+.video-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; background: var(--panel); }
+.video-placeholder:hover { background: #243447; }
+.video-play { font-size: 56px; color: var(--amber); margin-bottom: 12px; line-height: 1; }
+.video-play-label { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+
+/* ── PLANS ── */
 .pay-hero { text-align: center; padding: 32px 0 60px; }
 .pay-tag {
   font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
@@ -343,7 +353,7 @@ body::before {
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="logo"><div class="logo-dot"></div>PLAN<span style="margin-left:0.04em">IQ PRO</span></div>
+    <div class="logo"><div class="logo-dot"></div>PLANIQ PRO</div>
     <div class="plan-pill" id="planPill">Plan: <span id="planLabel">—</span></div>
   </div>
 
@@ -357,7 +367,21 @@ body::before {
       <p class="pay-sub">Upload your PDF construction drawings and PlanIQ Pro's AI instantly generates every RFI your project needs — streamed live, ready to export.</p>
     </div>
 
-    <div class="plans-grid">
+    <!-- VIDEO DEMO SECTION -->
+    <div class="video-section">
+      <div class="video-label">// See It In Action</div>
+      <div class="video-title">WATCH HOW IT WORKS<br><em>60 seconds</em></div>
+      <div class="video-wrap" id="videoWrap">
+        <!-- Replace VIDEO_ID below with your Loom video ID after recording -->
+        <!-- Example: if your Loom URL is https://loom.com/share/abc123 then VIDEO_ID = abc123 -->
+        <div class="video-placeholder" onclick="this.innerHTML='<iframe src=\'https://www.loom.com/embed/VIDEO_ID\' frameborder=\'0\' allowfullscreen style=\'width:100%;height:100%;\'></iframe>'">
+          <div class="video-play">▶</div>
+          <div class="video-play-label">Watch Demo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="plans-grid" style="grid-template-columns: 1fr 1fr; max-width: 680px;">
       <div class="plan-card">
         <div class="plan-card-name">STARTER</div>
         <div class="plan-card-price"><sup>$</sup>39</div>
@@ -368,36 +392,23 @@ body::before {
         <div class="plan-feat">Up to 10 RFIs generated</div>
         <div class="plan-feat">Full AI RFI analysis</div>
         <div class="plan-feat">PDF + CSV export</div>
+        <div class="plan-feat">✉ Email any RFI instantly</div>
         <button class="plan-btn" onclick="selectPlan('starter', '$39 one-time')">Get Started →</button>
       </div>
-      <div class="plan-card">
+      <div class="plan-card featured">
+        <div class="plan-card-tag">Best Value</div>
         <div class="plan-card-name">PROFESSIONAL</div>
-        <div class="plan-card-price"><sup>$</sup>199</div>
+        <div class="plan-card-price"><sup>$</sup>149</div>
         <div class="plan-card-note">per month · unlimited uploads</div>
         <div class="plan-card-divider"></div>
         <div class="plan-feat">Unlimited uploads</div>
         <div class="plan-feat">Up to 35 pages per drawing set</div>
-        <div class="plan-feat">Up to 10 RFIs generated</div>
+        <div class="plan-feat">Up to 12 RFIs generated</div>
         <div class="plan-feat">Full AI RFI analysis</div>
         <div class="plan-feat">PDF + CSV export</div>
-        <button class="plan-btn" onclick="selectPlan('pro', '$199/month')">Start Free Trial →</button>
-      </div>
-      <div class="plan-card featured">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-          <div class="plan-card-name" style="margin-bottom:0">ELITE PRO</div>
-          <div class="plan-card-tag" style="margin-bottom:0">Elite</div>
-        </div>
-        <div class="plan-card-price"><sup>$</sup>299</div>
-        <div class="plan-card-note">per month · unlimited uploads</div>
-        <div class="plan-card-divider"></div>
-        <div class="plan-feat">Unlimited uploads</div>
-        <div class="plan-feat">Up to 40 pages per drawing set</div>
-        <div class="plan-feat">Up to 15 RFIs generated</div>
-        <div class="plan-feat">Full AI RFI analysis</div>
-        <div class="plan-feat">PDF + CSV export</div>
-        <div class="plan-feat">Priority ranking + risk scoring</div>
-        <div class="plan-feat">Procore integration</div>
-        <button class="plan-btn" onclick="selectPlan('elite', '$299/month')">Get Elite Access →</button>
+        <div class="plan-feat">✉ Email any RFI instantly</div>
+        <div class="plan-feat">Procore-ready CSV export</div>
+        <button class="plan-btn" onclick="selectPlan('pro', '$149/month')">Get Started →</button>
       </div>
     </div>
   </div>
@@ -519,7 +530,7 @@ body::before {
       </div>
       <div class="export-actions">
         <button class="export-btn" onclick="exportCSV()">↓ Download CSV</button>
-        <button class="export-btn procore" id="procoreBtn" style="display:none" onclick="openProcoreModal()">⬆ Push to Procore</button>
+        <button class="export-btn procore" onclick="exportProcoreCSV()">↓ Procore Import CSV</button>
         <button class="export-btn primary" onclick="showSection('sec-upload')">+ New Upload</button>
       </div>
     </div>
@@ -527,38 +538,6 @@ body::before {
 
 </div><!-- /app-shell -->
 
-<!-- PROCORE MODAL (Elite plan only) -->
-<div class="modal-overlay" id="procoreModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeProcoreModal()">✕</button>
-    <div id="procoreForm">
-      <div class="modal-logo">🏗 PROCORE</div>
-      <div class="modal-title">PUSH RFIS TO PROCORE</div>
-      <div class="modal-sub">Enter your Procore project details. PlanIQ Pro will format and push all generated RFIs directly into your project's RFI log.</div>
-      <div class="modal-field">
-        <label class="modal-label">Procore Company ID</label>
-        <input type="text" class="modal-input" id="procoreCompanyId" placeholder="e.g. 12345678"/>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Procore Project ID</label>
-        <input type="text" class="modal-input" id="procoreProjectId" placeholder="e.g. 87654321"/>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">Procore API Access Token</label>
-        <input type="text" class="modal-input" id="procoreToken" placeholder="Bearer eyJhbGci..."/>
-      </div>
-      <button class="modal-submit" onclick="pushToProcore()">Push <span id="pushCount">0</span> RFIs to Procore →</button>
-      <div class="modal-note">Find your token at app.procore.com → Developer Tools → OAuth.</div>
-    </div>
-    <div class="modal-success" id="procoreSuccess" style="display:none; text-align:center; padding:20px 0;">
-      <div style="font-size:56px; margin-bottom:16px;">✅</div>
-      <div style="font-family:var(--disp); font-size:36px; letter-spacing:1px; margin-bottom:8px;">RFIS PUSHED!</div>
-      <div style="font-family:var(--mono); font-size:12px; opacity:0.55; line-height:1.7;" id="procoreSuccessText">
-        RFIs successfully queued in Procore.
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 /* ═══════════════════════════════════════════
@@ -593,12 +572,11 @@ function selectPlan(plan, label) {
   STATE.planLabel = label;
   // Set upload limits and page limits per plan
   STATE.uploadsMax  = plan === 'starter' ? 2 : 999;
-  STATE.pagesMax    = plan === 'starter' ? 30 : plan === 'pro' ? 35 : 40;
+  STATE.pagesMax    = plan === 'starter' ? 30 : 35;
   document.getElementById('planLabel').textContent = label;
   const subText = {
     starter: 'Starter Plan — $39 one-time',
-    pro:     'Professional Plan — $199/month',
-    elite:   'Elite Professional Plan — $299/month'
+    pro:     'Professional Plan — $149/month'
   };
   document.getElementById('payFormSub').textContent = subText[plan];
   showSection('sec-payment');
@@ -615,9 +593,6 @@ function completePurchase() {
   // Update quota display
   document.getElementById('uploadsMax').textContent =
     STATE.plan === 'starter' ? STATE.uploadsMax : '∞';
-  // Show Procore button for Elite plan only
-  document.getElementById('procoreBtn').style.display =
-    STATE.plan === 'elite' ? 'inline-block' : 'none';
   updateQuota();
   showSection('sec-upload');
 }
@@ -827,7 +802,7 @@ async function startAnalysis() {
   await delay(300);
 
   // RFI count limit based on plan
-  const rfiLimit = STATE.plan === 'elite' ? 15 : 10;
+  const rfiLimit = STATE.plan === 'pro' ? 12 : 10;
 
   const prompt = `You are the most elite construction project manager in the world — a licensed architect and engineer with 30 years of experience on complex commercial projects. You have an exceptional eye for every type of issue that causes field problems, change orders, and delays.
 
@@ -1065,6 +1040,36 @@ function filterRFIs(filter, btn) {
 /* ═══════════════════════════════════════════
    EXPORT FUNCTIONS
 ═══════════════════════════════════════════ */
+function exportProcoreCSV() {
+  // Procore RFI import format
+  const headers = [
+    'Subject',
+    'Description', 
+    'Status',
+    'Priority',
+    'Location',
+    'Reference',
+    'Cost Impact',
+    'Schedule Impact',
+    'Discipline'
+  ];
+
+  const rows = STATE.rfis.map(r => [
+    `"${(r.title || '').replace(/"/g,'""')}"`,
+    `"${(r.description || '').replace(/"/g,'""')}"`,
+    '"Draft"',
+    `"${r.priority === 'high' ? 'High' : r.priority === 'medium' ? 'Normal' : 'Low'}"`,
+    `"${(r.location || '').replace(/"/g,'""')}"`,
+    `"${(r.spec_ref || r.page_ref || '').replace(/"/g,'""')}"`,
+    `"${(r.cost_impact || '').replace(/"/g,'""')}"`,
+    `"${(r.schedule_impact || '').replace(/"/g,'""')}"`,
+    `"${(r.discipline || '').replace(/"/g,'""')}"`
+  ].join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile('planiqpro-procore-import.csv', csv, 'text/csv');
+}
+
 function exportCSV() {
   const headers = ['ID','Title','Priority','Discipline','Location','Description','Spec Ref','Cost Impact','Schedule Impact'];
   const rows = STATE.rfis.map(r => [
@@ -1089,63 +1094,6 @@ function downloadFile(name, content, type) {
   URL.revokeObjectURL(url);
 }
 
-/* ═══════════════════════════════════════════
-   PROCORE INTEGRATION (Elite plan)
-═══════════════════════════════════════════ */
-function openProcoreModal() {
-  document.getElementById('procoreModal').classList.add('open');
-  document.getElementById('procoreForm').style.display = 'block';
-  document.getElementById('procoreSuccess').style.display = 'none';
-  document.getElementById('pushCount').textContent = STATE.rfis.length;
-}
-function closeProcoreModal() {
-  document.getElementById('procoreModal').classList.remove('open');
-}
-document.getElementById('procoreModal').addEventListener('click', function(e) {
-  if (e.target === this) closeProcoreModal();
-});
-
-async function pushToProcore() {
-  const companyId = document.getElementById('procoreCompanyId').value.trim();
-  const projectId = document.getElementById('procoreProjectId').value.trim();
-  const token     = document.getElementById('procoreToken').value.trim();
-  if (!companyId || !projectId || !token) {
-    alert('Please enter your Procore Company ID, Project ID, and API Token.');
-    return;
-  }
-  const btn = document.querySelector('.modal-submit');
-  btn.textContent = 'Pushing to Procore...';
-  btn.disabled = true;
-
-  let pushed = 0, errors = 0;
-  for (const rfi of STATE.rfis) {
-    try {
-      const res = await fetch(`https://api.procore.com/rest/v1.0/projects/${projectId}/rfis`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Procore-Company-Id': companyId
-        },
-        body: JSON.stringify({ rfi: {
-          subject: rfi.title,
-          description: rfi.description,
-          status: 'draft',
-          priority: rfi.priority === 'high' ? 'high' : rfi.priority === 'medium' ? 'normal' : 'low',
-          reference: rfi.spec_ref || '',
-          location: rfi.location || ''
-        }})
-      });
-      if (res.ok) pushed++; else errors++;
-    } catch(e) { errors++; }
-  }
-
-  document.getElementById('procoreForm').style.display = 'none';
-  document.getElementById('procoreSuccess').style.display = 'block';
-  document.getElementById('procoreSuccessText').innerHTML = pushed > 0
-    ? `<strong>${pushed} RFI${pushed>1?'s':''}</strong> pushed to Procore Project ${projectId}.<br>Check your RFI log at <em>app.procore.com</em>.`
-    : `RFIs formatted for Procore. Note: direct browser calls may be blocked — use the JSON export to import via Procore's import tool, or deploy with a backend server.`;
-}
 
 /* ═══════════════════════════════════════════
    DEMO RFIS (fallback if no API key set)
