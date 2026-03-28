@@ -343,7 +343,7 @@ body::before {
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="logo"><div class="logo-dot"></div>PLANIQ PRO</div>
+    <div class="logo"><div class="logo-dot"></div>PLAN<span style="margin-left:0.04em">IQ PRO</span></div>
     <div class="plan-pill" id="planPill">Plan: <span id="planLabel">—</span></div>
   </div>
 
@@ -383,9 +383,11 @@ body::before {
         <button class="plan-btn" onclick="selectPlan('pro', '$199/month')">Start Free Trial →</button>
       </div>
       <div class="plan-card featured">
-        <div class="plan-card-tag">Elite</div>
-        <div class="plan-card-name">ELITE PRO</div>
-        <div class="plan-card-price"><sup>$</sup>499</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <div class="plan-card-name" style="margin-bottom:0">ELITE PRO</div>
+          <div class="plan-card-tag" style="margin-bottom:0">Elite</div>
+        </div>
+        <div class="plan-card-price"><sup>$</sup>299</div>
         <div class="plan-card-note">per month · unlimited uploads</div>
         <div class="plan-card-divider"></div>
         <div class="plan-feat">Unlimited uploads</div>
@@ -395,7 +397,7 @@ body::before {
         <div class="plan-feat">PDF + CSV export</div>
         <div class="plan-feat">Priority ranking + risk scoring</div>
         <div class="plan-feat">Procore integration</div>
-        <button class="plan-btn" onclick="selectPlan('elite', '$499/month')">Get Elite Access →</button>
+        <button class="plan-btn" onclick="selectPlan('elite', '$299/month')">Get Elite Access →</button>
       </div>
     </div>
   </div>
@@ -596,7 +598,7 @@ function selectPlan(plan, label) {
   const subText = {
     starter: 'Starter Plan — $39 one-time',
     pro:     'Professional Plan — $199/month',
-    elite:   'Elite Professional Plan — $499/month'
+    elite:   'Elite Professional Plan — $299/month'
   };
   document.getElementById('payFormSub').textContent = subText[plan];
   showSection('sec-payment');
