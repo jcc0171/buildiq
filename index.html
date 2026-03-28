@@ -255,6 +255,7 @@ body::before {
 .rfi-card-meta { margin-top: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
 .rfi-meta-item { font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px; opacity: 0.45; }
 .rfi-meta-item strong { opacity: 0.8; }
+.rfi-page-ref { opacity: 1 !important; color: var(--amber) !important; font-size: 11px !important; background: rgba(212,130,10,0.08); padding: 3px 8px; border: 1px solid rgba(212,130,10,0.25); }
 
 /* Export bar */
 .export-bar {
@@ -655,10 +656,12 @@ async function processFiles(newFiles) {
     }
     if (STATE.files.find(f => f.name === file.name)) continue;
 
-    // Parse PDF with PDF.js
+    // Parse PDF with PDF.js — extract each page individually
     const arrayBuffer = await file.arrayBuffer();
     let pageCount = 0;
     let extractedText = '';
+    let pageData = []; // Store each page separately for conflict detection
+
     try {
       pdfjsLib.GlobalWorkerOptions.workerSrc =
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -670,13 +673,39 @@ async function processFiles(newFiles) {
         continue;
       }
 
-      // Extract text from each page
-      for (let i = 1; i <= Math.min(pageCount, 30); i++) {
+      // Extract text from each page individually with rich metadata
+      for (let i = 1; i <= Math.min(pageCount, STATE.pagesMax); i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(' ');
-        extractedText += `\n--- PAGE ${i} ---\n${pageText}`;
+
+        // Get all text items with position data for better context
+        const items = content.items;
+        const pageText = items.map(item => item.str).join(' ').trim();
+
+        // Try to detect sheet number from page content
+        const sheetMatch = pageText.match(/\b([A-Z]{1,2}-?\d{3}[A-Z]?)\b/g);
+        const sheetNum = sheetMatch ? sheetMatch[0] : `Page ${i}`;
+
+        // Try to detect discipline from content
+        let discipline = 'Unknown';
+        const pt = pageText.toLowerCase();
+        if (pt.includes('floor plan') || pt.includes('elevation') || pt.includes('reflected ceiling')) discipline = 'Architectural';
+        else if (pt.includes('structural') || pt.includes('framing') || pt.includes('foundation') || pt.includes('beam') || pt.includes('column')) discipline = 'Structural';
+        else if (pt.includes('mechanical') || pt.includes('hvac') || pt.includes('plumbing') || pt.includes('electrical') || pt.includes('duct')) discipline = 'MEP';
+        else if (pt.includes('civil') || pt.includes('grading') || pt.includes('drainage') || pt.includes('utility')) discipline = 'Civil';
+        else if (pt.includes('fire') || pt.includes('sprinkler') || pt.includes('suppression')) discipline = 'Fire Protection';
+
+        pageData.push({
+          pageNum: i,
+          sheetNum,
+          discipline,
+          text: pageText
+        });
+
+        // Build structured text with rich context
+        extractedText += `\n\n=== PAGE ${i} | SHEET: ${sheetNum} | DISCIPLINE: ${discipline} ===\n${pageText}`;
       }
+
     } catch(err) {
       extractedText = '[Could not extract text — drawings may be image-based. AI will analyze based on file context.]';
       pageCount = 1;
@@ -687,6 +716,7 @@ async function processFiles(newFiles) {
       size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
       pages: pageCount,
       text: extractedText,
+      pageData, // Store structured page data
       ok: pageCount <= STATE.pagesMax
     };
 
@@ -764,10 +794,15 @@ async function startAnalysis() {
     log.scrollTop = log.scrollHeight;
   };
 
-  // Build the drawing summary for the prompt — extract more text per page
-  const drawingSummary = STATE.files.map(f =>
-    `FILE: ${f.name} (${f.pages} pages)\nCONTENT EXCERPT:\n${f.text.slice(0, 6000)}`
-  ).join('\n\n===\n\n');
+  // Build rich page-by-page drawing summary for conflict detection
+  const drawingSummary = STATE.files.map(f => {
+    const pageIndex = f.pageData && f.pageData.length > 0
+      ? f.pageData.map(p =>
+          `PAGE ${p.pageNum} | SHEET: ${p.sheetNum} | DISCIPLINE: ${p.discipline}\n${p.text.slice(0, 500)}`
+        ).join('\n\n---\n\n')
+      : f.text.slice(0, 8000);
+    return `FILE: ${f.name} (${f.pages} pages)\n\nPAGE-BY-PAGE BREAKDOWN:\n${pageIndex}`;
+  }).join('\n\n=== NEXT FILE ===\n\n');
 
   logLine('// PlanIQ Pro AI Engine v2.4 — Initialized', 'highlight');
   logLine(`// Loading ${STATE.files.length} drawing set(s)...`);
@@ -784,45 +819,36 @@ async function startAnalysis() {
   // RFI count limit based on plan
   const rfiLimit = STATE.plan === 'elite' ? 15 : 10;
 
-  const prompt = `You are a senior construction project manager and licensed architect with 25+ years of commercial construction experience. You are performing a detailed constructability review of PDF construction drawings.
+  const prompt = `You are the most elite construction project manager in the world — a licensed architect and engineer with 30 years of experience on complex commercial projects. You have reviewed thousands of construction drawing sets and have an exceptional eye for conflicts, gaps, and coordination issues that cost projects time and money.
 
-DRAWING CONTENT BY PAGE:
+You are performing a thorough constructability and coordination review. Each page has been extracted individually with its sheet number and discipline identified.
+
+DRAWING SET — PAGE BY PAGE:
 ${drawingSummary}
 
-CRITICAL INSTRUCTIONS — READ CAREFULLY:
-1. Read EVERY page of the drawing content carefully and separately
-2. Each RFI must reference the SPECIFIC page, sheet number, room number, grid line, or detail number where the issue was found — do NOT default to G001 or the cover sheet unless the issue is actually on that sheet
-3. Look for issues ACROSS different pages — conflicts between sheets are the most valuable RFIs
-4. Reference actual room numbers, dimensions, equipment tags, door numbers, grid coordinates, and spec sections you find in the text
-5. Each RFI must be about a DIFFERENT issue on a DIFFERENT location — no repeating sheet references unless truly necessary
-6. Spread your RFIs across multiple disciplines: Architectural, Structural, MEP, Civil, Fire Protection
-7. Write descriptions that reference SPECIFIC details from the drawings — room names, dimensions, equipment, materials you actually see in the content
+YOUR MISSION: Generate exactly ${rfiLimit} RFIs that only a top-tier senior PM would catch.
 
-TYPES OF ISSUES TO LOOK FOR:
-- Conflicts between architectural and structural drawings
-- Missing dimensions or unclear dimensions
-- Door/window schedule conflicts with floor plans
-- MEP coordination issues (ducts, pipes, conduit conflicts)
-- Code compliance gaps (ADA, IBC, NFPA)
-- Specification conflicts with drawings
-- Missing details or sections
-- Finish schedule conflicts
-- Structural connections not detailed
-- Fire rating conflicts
-- Accessibility route issues
+ELITE ANALYSIS RULES — FOLLOW ALL OF THESE:
+1. CROSS-TRADE CONFLICTS are your highest priority — look for cases where one discipline conflicts with another (structural beam vs MEP duct, arch wall type vs structural plan, plumbing penetrating rated wall without detail, ceiling height vs duct depth)
+2. Every RFI MUST include the specific page number AND sheet number in "page_ref" — e.g. "Page 3, Sheet A-201" — this is MANDATORY
+3. For cross-trade conflicts, list BOTH sheets — e.g. "Page 3 Sheet A-201 vs Page 7 Sheet S-301"
+4. Reference ACTUAL content from the drawings — real room numbers, keynote numbers, dimension values, equipment tags, grid lines, door numbers visible in the text
+5. NEVER write a generic RFI — every RFI must be traceable to specific content
+6. Spread RFIs across different pages and disciplines — maximum 2 RFIs per sheet
+7. Priority: HIGH = safety/code/structural or field stoppage. MEDIUM = needs resolution before trade starts. LOW = clarification needed but won't stop work.
 
-Generate exactly ${rfiLimit} RFIs. RESPOND ONLY WITH VALID JSON — NO MARKDOWN, NO EXPLANATION, NO PREAMBLE.
+RESPOND ONLY WITH VALID JSON ARRAY — NO MARKDOWN, NO TEXT BEFORE OR AFTER.
 
-Return a JSON array:
 [
   {
     "id": "RFI-001",
-    "title": "Specific concise title referencing the actual issue and location",
+    "title": "Specific title naming the exact issue, location, and trades involved",
     "priority": "high" or "medium" or "low",
     "discipline": "Architectural" or "Structural" or "MEP" or "Civil" or "Fire Protection",
-    "location": "Specific sheet number AND room/grid/detail reference — e.g. Sheet A-201, Room 3-104, Grid B-7",
-    "description": "3 sentences: (1) What the drawing shows specifically, (2) What is unclear, missing, or conflicting, (3) Why it matters and what needs to be provided.",
-    "spec_ref": "Specific sheet number, detail number, or specification section — never just G001 unless issue is on cover sheet",
+    "page_ref": "Page X, Sheet ABC-123",
+    "location": "Specific room number, grid intersection, or area name from the drawings",
+    "description": "Sentence 1: What the drawing specifically shows on this page. Sentence 2: What is the conflict, gap, or ambiguity — reference the other sheet if cross-trade. Sentence 3: Why this matters in the field and exactly what information is needed to resolve it.",
+    "spec_ref": "Specific sheet number or spec section — e.g. Sheet M-201, Detail 3/A-401",
     "cost_impact": "Low (<$5K)" or "Medium ($5K-$50K)" or "High (>$50K)",
     "schedule_impact": "None" or "Low (1-3 days)" or "Medium (1-2 weeks)" or "High (2+ weeks)"
   }
@@ -949,6 +975,7 @@ function renderRFIs(rfis, filter = 'all') {
       </div>
       <div class="rfi-card-body">${rfi.description}</div>
       <div class="rfi-card-meta">
+        ${rfi.page_ref ? `<div class="rfi-meta-item rfi-page-ref">📄 <strong>${rfi.page_ref}</strong></div>` : ''}
         <div class="rfi-meta-item"><strong>Discipline:</strong> ${rfi.discipline}</div>
         <div class="rfi-meta-item"><strong>Location:</strong> ${rfi.location}</div>
         <div class="rfi-meta-item"><strong>Cost Impact:</strong> ${rfi.cost_impact}</div>
