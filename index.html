@@ -242,7 +242,7 @@ body::before {
 .rfi-card.medium { border-left-color: var(--amber); }
 .rfi-card.low { border-left-color: var(--sage); }
 .rfi-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
-.rfi-card-num { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.45; }
+.rfi-card-num { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.75; color: var(--amber); font-weight: 500; }
 .rfi-card-title { font-family: var(--disp); font-size: 20px; letter-spacing: 0.5px; flex: 1; }
 .rfi-priority {
   font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
@@ -255,6 +255,15 @@ body::before {
 .rfi-card-meta { margin-top: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
 .rfi-meta-item { font-family: var(--mono); font-size: 10px; letter-spacing: 0.5px; opacity: 0.45; }
 .rfi-meta-item strong { opacity: 0.8; }
+.rfi-card-footer { margin-top: 14px; display: flex; justify-content: flex-end; }
+.rfi-email-btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  background: transparent; color: var(--steel); border: 1px solid var(--line);
+  padding: 7px 16px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.rfi-email-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
 .rfi-page-ref { opacity: 1 !important; color: var(--amber) !important; font-size: 11px !important; background: rgba(212,130,10,0.08); padding: 3px 8px; border: 1px solid rgba(212,130,10,0.25); }
 
 /* Export bar */
@@ -508,7 +517,6 @@ body::before {
       </div>
       <div class="export-actions">
         <button class="export-btn" onclick="exportCSV()">↓ Download CSV</button>
-        <button class="export-btn" onclick="exportJSON()">↓ Download JSON</button>
         <button class="export-btn procore" id="procoreBtn" style="display:none" onclick="openProcoreModal()">⬆ Push to Procore</button>
         <button class="export-btn primary" onclick="showSection('sec-upload')">+ New Upload</button>
       </div>
@@ -819,23 +827,51 @@ async function startAnalysis() {
   // RFI count limit based on plan
   const rfiLimit = STATE.plan === 'elite' ? 15 : 10;
 
-  const prompt = `You are the most elite construction project manager in the world — a licensed architect and engineer with 30 years of experience on complex commercial projects. You have reviewed thousands of construction drawing sets and have an exceptional eye for conflicts, gaps, and coordination issues that cost projects time and money.
+  const prompt = `You are the most elite construction project manager in the world — a licensed architect and engineer with 30 years of experience on complex commercial projects. You have an exceptional eye for every type of issue that causes field problems, change orders, and delays.
 
-You are performing a thorough constructability and coordination review. Each page has been extracted individually with its sheet number and discipline identified.
+You are performing a comprehensive constructability and coordination review of a full construction drawing set. Each page has been extracted with its sheet number and discipline identified.
 
 DRAWING SET — PAGE BY PAGE:
 ${drawingSummary}
 
-YOUR MISSION: Generate exactly ${rfiLimit} RFIs that only a top-tier senior PM would catch.
+YOUR MISSION: Generate exactly ${rfiLimit} professional RFIs covering the FULL SPECTRUM of issues in these drawings.
 
 ELITE ANALYSIS RULES — FOLLOW ALL OF THESE:
-1. CROSS-TRADE CONFLICTS are your highest priority — look for cases where one discipline conflicts with another (structural beam vs MEP duct, arch wall type vs structural plan, plumbing penetrating rated wall without detail, ceiling height vs duct depth)
-2. Every RFI MUST include the specific page number AND sheet number in "page_ref" — e.g. "Page 3, Sheet A-201" — this is MANDATORY
-3. For cross-trade conflicts, list BOTH sheets — e.g. "Page 3 Sheet A-201 vs Page 7 Sheet S-301"
-4. Reference ACTUAL content from the drawings — real room numbers, keynote numbers, dimension values, equipment tags, grid lines, door numbers visible in the text
-5. NEVER write a generic RFI — every RFI must be traceable to specific content
-6. Spread RFIs across different pages and disciplines — maximum 2 RFIs per sheet
-7. Priority: HIGH = safety/code/structural or field stoppage. MEDIUM = needs resolution before trade starts. LOW = clarification needed but won't stop work.
+
+TYPES OF RFIS TO GENERATE (spread across all categories):
+A) SINGLE-PAGE ISSUES — problems found on one sheet alone:
+   - Missing dimensions, unclear dimensions, or dimension conflicts on a single sheet
+   - Incomplete details or missing callouts
+   - Spec section referenced but not provided
+   - Room or space not fully defined (no finish, no ceiling height, no lighting)
+   - Door or window not in schedule
+   - Keynote referenced but not explained
+   - Equipment shown but not specified
+   - Code compliance issue on one sheet (ADA clearance, egress width, occupancy load)
+   - Fire rating not indicated on rated wall or assembly
+
+B) CROSS-PAGE / CROSS-TRADE CONFLICTS — problems between multiple sheets:
+   - Structural element conflicts with MEP routing
+   - Architectural floor plan conflicts with structural framing plan
+   - Ceiling height on arch plan conflicts with duct/beam depth
+   - Plumbing or electrical penetrating rated assembly without detail
+   - Civil grading conflicts with architectural finish floor elevation
+   - Fire protection head location conflicts with structural or architectural
+
+C) DRAWING SET LEVEL ISSUES:
+   - Missing sheets referenced but not in set
+   - Inconsistent keynotes between floors
+   - Specification conflicts with drawn conditions
+   - Phasing or sequencing conflicts
+
+MANDATORY RULES:
+1. Every RFI MUST include specific page number AND sheet number in "page_ref" — e.g. "Page 3, Sheet A-201" — MANDATORY
+2. For cross-trade conflicts reference BOTH sheets — e.g. "Page 3, Sheet A-201 vs Page 7, Sheet M-301"
+3. Reference ACTUAL content — real room numbers, keynote numbers, dimensions, equipment tags, grid lines from the text
+4. NEVER write a generic RFI — every RFI must be traceable to specific drawing content
+5. Maximum 2 RFIs per sheet — spread across the entire drawing set
+6. Priority: HIGH = safety/code/structural/field stoppage. MEDIUM = needs resolution before trade starts. LOW = clarification that won't stop work.
+7. Write descriptions that a contractor or architect can act on immediately
 
 RESPOND ONLY WITH VALID JSON ARRAY — NO MARKDOWN, NO TEXT BEFORE OR AFTER.
 
@@ -847,7 +883,7 @@ RESPOND ONLY WITH VALID JSON ARRAY — NO MARKDOWN, NO TEXT BEFORE OR AFTER.
     "discipline": "Architectural" or "Structural" or "MEP" or "Civil" or "Fire Protection",
     "page_ref": "Page X, Sheet ABC-123",
     "location": "Specific room number, grid intersection, or area name from the drawings",
-    "description": "Sentence 1: What the drawing specifically shows on this page. Sentence 2: What is the conflict, gap, or ambiguity — reference the other sheet if cross-trade. Sentence 3: Why this matters in the field and exactly what information is needed to resolve it.",
+    "description": "Sentence 1: What the drawing specifically shows. Sentence 2: What is the conflict, gap, or ambiguity — reference the other sheet if cross-trade. Sentence 3: Why this matters in the field and exactly what information is needed to resolve it.",
     "spec_ref": "Specific sheet number or spec section — e.g. Sheet M-201, Detail 3/A-401",
     "cost_impact": "Low (<$5K)" or "Medium ($5K-$50K)" or "High (>$50K)",
     "schedule_impact": "None" or "Low (1-3 days)" or "Medium (1-2 weeks)" or "High (2+ weeks)"
@@ -982,9 +1018,39 @@ function renderRFIs(rfis, filter = 'all') {
         <div class="rfi-meta-item"><strong>Schedule:</strong> ${rfi.schedule_impact}</div>
         ${rfi.spec_ref ? `<div class="rfi-meta-item"><strong>Ref:</strong> ${rfi.spec_ref}</div>` : ''}
       </div>
+      <div class="rfi-card-footer">
+        <button class="rfi-email-btn" onclick="emailRFI(${i})">✉ Send via Email</button>
+      </div>
     `;
+    card.querySelector('.rfi-email-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      emailRFI(rfi);
+    });
     container.appendChild(card);
   });
+}
+
+function emailRFI(rfi) {
+  const subject = encodeURIComponent(`RFI Request — ${rfi.id}: ${rfi.title}`);
+  const body = encodeURIComponent(
+`RFI ${rfi.id} — ${rfi.title}
+${'='.repeat(60)}
+
+PRIORITY: ${rfi.priority?.toUpperCase()}
+DISCIPLINE: ${rfi.discipline}
+${rfi.page_ref ? `PAGE REFERENCE: ${rfi.page_ref}` : ''}
+LOCATION: ${rfi.location}
+SPEC REFERENCE: ${rfi.spec_ref || 'N/A'}
+COST IMPACT: ${rfi.cost_impact}
+SCHEDULE IMPACT: ${rfi.schedule_impact}
+
+DESCRIPTION:
+${rfi.description}
+
+${'='.repeat(60)}
+Generated by PlanIQ Pro — planiqpro.com
+  `);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 function filterRFIs(filter, btn) {
